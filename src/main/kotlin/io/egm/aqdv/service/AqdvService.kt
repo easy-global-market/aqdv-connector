@@ -6,24 +6,27 @@ import arrow.core.right
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.coroutines.awaitObjectResult
+import io.egm.aqdv.config.ApplicationProperties
 import io.egm.aqdv.model.ScalarTimeSerie
 import io.egm.aqdv.model.ScalarTimeSerieData
 import io.egm.aqdv.model.ScalarTimeSerieDataDeserializer
 import io.egm.aqdv.model.ScalarTimeSerieDeserializer
 import kotlinx.coroutines.runBlocking
-import org.eclipse.microprofile.config.ConfigProvider
 import org.jboss.logging.Logger
 import java.time.ZonedDateTime
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
+import javax.inject.Inject
 
 @ApplicationScoped
-class AqdvService {
+class AqdvService(
+    @Inject private val applicationProperties: ApplicationProperties,
+) {
 
     private val logger = Logger.getLogger(javaClass)
 
     init {
-        FuelManager.instance.basePath = ConfigProvider.getConfig().getValue("application.aqdv.url", String::class.java)
+        FuelManager.instance.basePath = applicationProperties.aqdv().url()
     }
 
     fun retrieveTimeSeries(): Either<String, List<ScalarTimeSerie>> =

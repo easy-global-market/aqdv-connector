@@ -1,11 +1,13 @@
 plugins {
     kotlin("jvm") version "1.4.32"
     kotlin("plugin.allopen") version "1.4.32"
+    kotlin("kapt") version "1.4.32"
     id("io.quarkus")
 }
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
     mavenLocal()
 }
 
@@ -25,7 +27,13 @@ dependencies {
     implementation("com.github.kittinunf.fuel:fuel-coroutines:2.3.1")
     implementation("com.github.kittinunf.fuel:fuel-jackson:2.3.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.+")
-    implementation("io.arrow-kt:arrow-core:0.13.2")
+    implementation("io.arrow-kt:arrow-core:0.11.0")
+    implementation("io.arrow-kt:arrow-syntax:0.11.0")
+
+    implementation("io.egm:kngsild:0.2.0")
+
+    kapt("io.arrow-kt:arrow-meta:0.11.0")
+
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("com.github.tomakehurst:wiremock-jre8:2.29.1")
