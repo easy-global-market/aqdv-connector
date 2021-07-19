@@ -9,7 +9,7 @@ import com.github.kittinunf.fuel.core.ResponseDeserializable
 import java.time.ZonedDateTime
 import java.util.*
 
-data class ScalarTimeserie(
+data class ScalarTimeSerie(
     val id: UUID,
     val name: String,
     val mnemonic: String,
@@ -17,8 +17,8 @@ data class ScalarTimeserie(
     val lastSampleTime: ZonedDateTime?
 )
 
-object ScalarTimeserieDeserializer : ResponseDeserializable<List<ScalarTimeserie>> {
-    override fun deserialize(content: String): List<ScalarTimeserie> =
+object ScalarTimeSerieDeserializer : ResponseDeserializable<List<ScalarTimeSerie>> {
+    override fun deserialize(content: String): List<ScalarTimeSerie> =
         jacksonObjectMapper.readValue(content)
 }
 

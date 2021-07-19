@@ -31,7 +31,7 @@ class AqdvServiceTests {
     }
 
     @Test
-    fun `it should retrieve a list of scalar timeseries`() {
+    fun `it should retrieve a list of scalar time series`() {
         stubFor(
             get(urlMatching("/aqdv-to-fiware/scalartimeseries"))
                 .willReturn(
@@ -58,12 +58,12 @@ class AqdvServiceTests {
             fail { "it should have returned a success result but got $it" }
         }, {
             assertEquals(1, it.size)
-            val scalarTimeserie = it[0]
-            assertEquals(UUID.fromString("bee5dc6a-973d-46df-967b-bc8ed6186e45"), scalarTimeserie.id)
-            assertEquals("Consommation", scalarTimeserie.name)
-            assertEquals("Mnémonique consommation", scalarTimeserie.mnemonic)
-            assertEquals("m3", scalarTimeserie.unit)
-            assertEquals("2021-07-19T00:00Z[UTC]", scalarTimeserie.lastSampleTime.toString())
+            val scalarTimeSerie = it[0]
+            assertEquals(UUID.fromString("bee5dc6a-973d-46df-967b-bc8ed6186e45"), scalarTimeSerie.id)
+            assertEquals("Consommation", scalarTimeSerie.name)
+            assertEquals("Mnémonique consommation", scalarTimeSerie.mnemonic)
+            assertEquals("m3", scalarTimeSerie.unit)
+            assertEquals("2021-07-19T00:00Z[UTC]", scalarTimeSerie.lastSampleTime.toString())
         })
     }
 }

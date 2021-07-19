@@ -6,8 +6,8 @@ import arrow.core.right
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.coroutines.awaitObjectResult
-import io.egm.aqdv.model.ScalarTimeserie
-import io.egm.aqdv.model.ScalarTimeserieDeserializer
+import io.egm.aqdv.model.ScalarTimeSerie
+import io.egm.aqdv.model.ScalarTimeSerieDeserializer
 import kotlinx.coroutines.runBlocking
 import org.eclipse.microprofile.config.ConfigProvider
 import org.jboss.logging.Logger
@@ -22,10 +22,10 @@ class AqdvService {
         FuelManager.instance.basePath = ConfigProvider.getConfig().getValue("application.aqdv.url", String::class.java)
     }
 
-    fun retrieveTimeSeries(): Either<String, List<ScalarTimeserie>> =
+    fun retrieveTimeSeries(): Either<String, List<ScalarTimeSerie>> =
         runBlocking {
             Fuel.get("/scalartimeseries")
-                .awaitObjectResult(ScalarTimeserieDeserializer)
+                .awaitObjectResult(ScalarTimeSerieDeserializer)
                 .fold(
                     { data -> data.right() },
                     { error -> error.response.responseMessage.left() }

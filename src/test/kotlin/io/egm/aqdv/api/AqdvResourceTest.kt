@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 class AqdvResourceTest {
 
     @Test
-    fun testScalarTimeseriesEndpoint() {
+    fun testScalarTimeSeriesEndpoint() {
         given()
           .`when`().get("/aqdv")
           .then()
