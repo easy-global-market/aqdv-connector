@@ -17,8 +17,18 @@ data class ScalarTimeSerie(
     val lastSampleTime: ZonedDateTime?
 )
 
+data class ScalarTimeSerieData(
+    val time: ZonedDateTime,
+    val value: Double
+)
+
 object ScalarTimeSerieDeserializer : ResponseDeserializable<List<ScalarTimeSerie>> {
     override fun deserialize(content: String): List<ScalarTimeSerie> =
+        jacksonObjectMapper.readValue(content)
+}
+
+object ScalarTimeSerieDataDeserializer : ResponseDeserializable<List<ScalarTimeSerieData>> {
+    override fun deserialize(content: String): List<ScalarTimeSerieData> =
         jacksonObjectMapper.readValue(content)
 }
 

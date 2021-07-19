@@ -6,6 +6,9 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.*
 import javax.inject.Inject
 
@@ -64,6 +67,45 @@ class AqdvServiceTests {
             assertEquals("Mnémonique consommation", scalarTimeSerie.mnemonic)
             assertEquals("m3", scalarTimeSerie.unit)
             assertEquals("2021-07-19T00:00Z[UTC]", scalarTimeSerie.lastSampleTime.toString())
+        })
+    }
+
+    @Test
+    fun `it should retrieve data from a scalar time serie`() {
+        stubFor(
+            get(urlPathMatching("/aqdv-to-fiware/scalartimeseries/bee5dc6a-973d-46df-967b-bc8ed6186e45/data"))
+                .willReturn(
+                    okJson(
+                        """
+                            [
+                                {
+                                    "time": "2021-07-01T00:00:00Z",
+                                    "value": 4824.0
+                                },
+                                {
+                                    "time": "2021-07-01T00:10:00Z",
+                                    "value": 4807.0
+                                }
+                            ]
+                        """.trimIndent()
+                    )
+                )
+        )
+
+        aqdvService.retrieveTimeSerieData(
+            UUID.fromString("bee5dc6a-973d-46df-967b-bc8ed6186e45"),
+            ZonedDateTime.now(),
+            ZonedDateTime.now()
+        ).fold({
+            fail { "it should have returned a success result but got $it" }
+        }, {
+            assertEquals(2, it.size)
+            assertTrue(
+                it.all { scalarTimeserieData ->
+                    listOf(4824.0, 4807.0).contains(scalarTimeserieData.value) &&
+                            scalarTimeserieData.time.isAfter(ZonedDateTime.of(2021, 6, 30, 0, 0, 0, 0, ZoneOffset.UTC))
+                }
+            )
         })
     }
 }
