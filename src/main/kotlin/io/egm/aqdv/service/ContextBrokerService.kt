@@ -1,8 +1,13 @@
 package io.egm.aqdv.service
 
+import arrow.core.Either
+import arrow.core.right
 import io.egm.aqdv.config.ApplicationProperties
 import io.egm.kngsild.api.EntityService
+import io.egm.kngsild.model.ApplicationError
+import io.egm.kngsild.model.ResourceNotFound
 import io.egm.kngsild.utils.AuthUtils
+import io.egm.kngsild.utils.ResourceLocation
 import org.jboss.logging.Logger
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
@@ -22,16 +27,34 @@ class ContextBrokerService(
     )
     private val entityService = EntityService(applicationProperties.contextBroker().url(), authUtils)
 
-    fun createGenericAqdvEntity() {
-        logger.info("Trying to create the generic Aqdv entity: ${applicationProperties.contextBroker().entityId()}")
-        entityService.retrieve(
+    fun createGenericAqdvEntity(): Either<ApplicationError, ResourceLocation> {
+        val aqdvEntityId = applicationProperties.contextBroker().entityId()
+        logger.info("Trying to create the generic Aqdv entity: $aqdvEntityId")
+        val retrieveResult = entityService.retrieve(
             applicationProperties.contextBroker().entityId(),
             emptyMap(),
             applicationProperties.contextBroker().context()
-        ).fold({
-            logger.error("Error while retrieving entity: $it")
-        }, {
-            logger.info("Aqdv entity already exists, that's fine!")
-        })
+        )
+        return when (retrieveResult) {
+            is Either.Left -> when (retrieveResult.a) {
+                is ResourceNotFound -> {
+                    logger.debug("Generic Aqdv entity does not exist, creating it")
+                    entityService.create(
+                        """
+                        {
+                            "id": "$aqdvEntityId",
+                            "type": "AqdvEntity",
+                            "@context": "${applicationProperties.contextBroker().context()}"
+                        }
+                        """.trimIndent()
+                    )
+                }
+                else -> retrieveResult
+            }
+            is Either.Right -> {
+                logger.debug("Generic Aqdv entity already exists, continuing")
+                "/ngsi-ld/v1/entities/${(retrieveResult.b["id"] as String)}".right()
+            }
+        }
     }
 }

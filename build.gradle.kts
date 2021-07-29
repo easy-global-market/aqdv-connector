@@ -29,12 +29,12 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.+")
     implementation("io.arrow-kt:arrow-core:0.11.0")
     implementation("io.arrow-kt:arrow-syntax:0.11.0")
-
-    implementation("io.egm:kngsild:0.2.0")
+    implementation("io.egm:kngsild:0.3.0")
 
     kapt("io.arrow-kt:arrow-meta:0.11.0")
 
     testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("io.quarkus:quarkus-junit5-mockito")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("com.github.tomakehurst:wiremock-jre8:2.29.1")
 }
