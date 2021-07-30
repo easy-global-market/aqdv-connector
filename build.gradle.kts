@@ -29,7 +29,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.+")
     implementation("io.arrow-kt:arrow-core:0.11.0")
     implementation("io.arrow-kt:arrow-syntax:0.11.0")
-    implementation("io.egm:kngsild:0.3.0")
+    implementation("io.arrow-kt:arrow-fx:0.11.0")
+    implementation("io.egm:kngsild:0.3.0-dev")
 
     kapt("io.arrow-kt:arrow-meta:0.11.0")
 

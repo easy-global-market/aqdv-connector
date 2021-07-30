@@ -14,6 +14,16 @@ interface ApplicationProperties {
 
     interface Aqdv {
         fun url(): String
+
+        // even if not used from this config interface (used by the scheduler config)
+        // the app won't start if they are not defined
+        fun cron(): Cron
+    }
+
+    interface Cron {
+        fun timeSeries(): String
+
+        fun timeSeriesData(): String
     }
 
     interface ContextBroker {

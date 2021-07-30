@@ -68,7 +68,7 @@ class ContextBrokerServiceTests {
         val createResult = contextBrokerService.createGenericAqdvEntity()
 
         createResult.fold({
-            fail("Expected a success result but got ${it.message}")
+            fail("Expected a success result but got $it")
         }, {
             assertEquals("/ngsi-ld/v1/entities/$aqdvEntityId", it)
         })
@@ -95,7 +95,7 @@ class ContextBrokerServiceTests {
         val createResult = contextBrokerService.createGenericAqdvEntity()
 
         createResult.fold({
-            fail("Expected a success result but got ${it.message}")
+            fail("Expected a success result but got $it")
         }, {
             assertEquals("/ngsi-ld/v1/entities/$aqdvEntityId", it)
         })
