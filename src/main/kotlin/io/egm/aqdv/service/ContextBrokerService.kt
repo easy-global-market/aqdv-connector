@@ -11,7 +11,6 @@ import io.egm.aqdv.utils.aqdvNameToNgsiLdProperty
 import io.egm.kngsild.api.EntityService
 import io.egm.kngsild.model.ResourceNotFound
 import io.egm.kngsild.utils.*
-import io.egm.kngsild.utils.JsonUtils.serializeObject
 import io.egm.kngsild.utils.UriUtils.toUri
 import org.jboss.logging.Logger
 import java.time.ZonedDateTime
@@ -84,26 +83,28 @@ class ContextBrokerService(
     fun prepareAttributesAppendPayload(
         aqdvEntity: NgsildEntity,
         scalarTimeSeries: List<ScalarTimeSerie>
-    ): Map<String, List<NgsiLdAttribute>> =
+    ): List<NgsiLdAttributeNG> =
         scalarTimeSeries.filter {
             !aqdvEntity.hasAttribute(it.name.aqdvNameToNgsiLdProperty(), "urn:ngsi-ld:Dataset:${it.id}".toUri())
-        }.map {
-            NgsiLdPropertyBuilder(it.name.aqdvNameToNgsiLdProperty())
+        }.map { scalarTimeSerie ->
+            NgsiLdPropertyBuilder(scalarTimeSerie.name.aqdvNameToNgsiLdProperty())
                 .withValue(0.0)
                 .withObservedAt(ZonedDateTime.parse("1970-01-01T00:00:00Z"))
-                .withUnitCode(it.unit)
-                .withDatasetId("urn:ngsi-ld:Dataset:${it.id}".toUri())
-                .withSubProperty("mnemonic", it.mnemonic)
+                .withUnitCode(scalarTimeSerie.unit)
+                .withDatasetId("urn:ngsi-ld:Dataset:${scalarTimeSerie.id}".toUri())
+                .let {
+                    if (scalarTimeSerie.mnemonic != null)
+                        it.withSubProperty("mnemonic", scalarTimeSerie.mnemonic)
+                    else
+                        it
+                }
                 .build()
-        }.groupBy {
-            // it has only one key: the attribute name
-            it.keys.first()
         }
 
-    fun addTimeSeriesToGenericAqdvEntity(attributes: Map<String, List<NgsiLdAttribute>>): Either<ApplicationException, String> {
+    fun addTimeSeriesToGenericAqdvEntity(attributes: List<NgsiLdAttributeNG>): Either<ApplicationException, String> {
         return entityService.appendAttributes(
             applicationProperties.contextBroker().entityId(),
-            serializeObject(attributes),
+            attributes,
             applicationProperties.contextBroker().context()
         ).mapLeft {
             ContextBrokerException(it.message)

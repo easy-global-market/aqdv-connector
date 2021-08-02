@@ -27,6 +27,7 @@ dependencies {
     implementation("com.github.kittinunf.fuel:fuel-coroutines:2.3.1")
     implementation("com.github.kittinunf.fuel:fuel-jackson:2.3.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.+")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("io.arrow-kt:arrow-core:0.11.0")
     implementation("io.arrow-kt:arrow-syntax:0.11.0")
     implementation("io.arrow-kt:arrow-fx:0.11.0")

@@ -12,7 +12,7 @@ import java.util.*
 data class ScalarTimeSerie(
     val id: UUID,
     val name: String,
-    val mnemonic: String,
+    val mnemonic: String?,
     val unit: String?,
     val lastSampleTime: ZonedDateTime?
 )
