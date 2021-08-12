@@ -29,7 +29,7 @@ class AqdvService(
 
     fun retrieveTimeSeries(): Either<ApplicationException, List<ScalarTimeSerie>> =
         runBlocking {
-            Fuel.get("/scalartimeseries")
+            Fuel.get("/scalartimeseries/")
                 .awaitObjectResult(ScalarTimeSerieDeserializer)
                 .fold(
                     { data -> data.right() },

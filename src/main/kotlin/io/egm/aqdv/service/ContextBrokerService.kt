@@ -97,7 +97,7 @@ class ContextBrokerService(
                 .withUnitCode(scalarTimeSerie.unit)
                 .withDatasetId("urn:ngsi-ld:Dataset:${scalarTimeSerie.id}".toUri())
                 .let {
-                    if (scalarTimeSerie.mnemonic != null)
+                    if (scalarTimeSerie.mnemonic != null && scalarTimeSerie.mnemonic != "")
                         it.withSubProperty("mnemonic", scalarTimeSerie.mnemonic)
                     else
                         it

@@ -24,7 +24,9 @@ data class ScalarTimeSerieData(
 
 object ScalarTimeSerieDeserializer : ResponseDeserializable<List<ScalarTimeSerie>> {
     override fun deserialize(content: String): List<ScalarTimeSerie> =
-        jacksonObjectMapper.readValue(content)
+        // it seems there is some unexpected unicode character hidden in the received payloads, remove it
+        // see https://salesforce.stackexchange.com/a/187321
+        jacksonObjectMapper.readValue(content.trim().replace("\uFEFF", ""))
 }
 
 object ScalarTimeSerieDataDeserializer : ResponseDeserializable<List<ScalarTimeSerieData>> {
