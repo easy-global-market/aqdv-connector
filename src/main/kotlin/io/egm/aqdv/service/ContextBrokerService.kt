@@ -14,7 +14,6 @@ import io.egm.kngsild.api.EntityService
 import io.egm.kngsild.api.TemporalService
 import io.egm.kngsild.model.ResourceNotFound
 import io.egm.kngsild.utils.*
-import io.egm.kngsild.utils.UriUtils.toUri
 import org.jboss.logging.Logger
 import java.time.ZonedDateTime
 import javax.enterprise.context.ApplicationScoped
@@ -89,13 +88,13 @@ class ContextBrokerService(
         scalarTimeSeries: List<ScalarTimeSerie>
     ): List<NgsiLdAttributeNG> =
         scalarTimeSeries.filter {
-            !aqdvEntity.hasAttribute(it.name.aqdvNameToNgsiLdProperty(), "urn:ngsi-ld:Dataset:${it.id}".toUri())
+            !aqdvEntity.hasAttribute(it.name.aqdvNameToNgsiLdProperty(), it.id.toDefaultDatasetId())
         }.map { scalarTimeSerie ->
             NgsiLdPropertyBuilder(scalarTimeSerie.name.aqdvNameToNgsiLdProperty())
                 .withValue(0.0)
                 .withObservedAt(ZonedDateTime.parse("1970-01-01T00:00:00Z"))
                 .withUnitCode(scalarTimeSerie.unit)
-                .withDatasetId("urn:ngsi-ld:Dataset:${scalarTimeSerie.id}".toUri())
+                .withDatasetId(scalarTimeSerie.id.toDefaultDatasetId())
                 .let {
                     if (scalarTimeSerie.mnemonic != null && scalarTimeSerie.mnemonic != "")
                         it.withSubProperty("mnemonic", scalarTimeSerie.mnemonic)
