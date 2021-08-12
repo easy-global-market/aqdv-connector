@@ -1,12 +1,15 @@
 package io.egm.aqdv.job
 
-import arrow.core.Either
 import arrow.core.computations.either
 import io.egm.aqdv.model.ApplicationException
 import io.egm.aqdv.service.AqdvService
 import io.egm.aqdv.service.ContextBrokerService
+import io.egm.aqdv.utils.aqdvNameToNgsiLdProperty
+import io.egm.kngsild.utils.getAttribute
+import io.egm.kngsild.utils.toDefaultDatasetId
 import io.quarkus.scheduler.Scheduled
 import org.jboss.logging.Logger
+import java.time.ZonedDateTime
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
 
@@ -31,9 +34,8 @@ class TimeSerieSynchronizer(
             val scalarTimeSeries = aqdvService.retrieveTimeSeries().bind()
             val aqdvEntity = contextBrokerService.retrieveGenericAqdvEntity().bind()
 
-            contextBrokerService.prepareAttributesAppendPayload(aqdvEntity, scalarTimeSeries).let {
-                contextBrokerService.addTimeSeriesToGenericAqdvEntity(it).bind()
-            }
+            val ngsiLdAttributes = contextBrokerService.prepareAttributesAppendPayload(aqdvEntity, scalarTimeSeries)
+            contextBrokerService.addTimeSeriesToGenericAqdvEntity(ngsiLdAttributes).bind()
 
         }.fold({
             logger.error("Error while synchronizing time series referential: $it")
@@ -50,5 +52,34 @@ class TimeSerieSynchronizer(
      *   - Send the last value of each time series to the CB (partial attibute update)
      */
     @Scheduled(cron = "{application.aqdv.cron.time-series-data}")
-    fun synchronizeTimeSeriesData(): Unit = TODO()
+    fun synchronizeTimeSeriesData(): Unit =
+        either.eager<ApplicationException, List<String>> {
+            val aqdvEntity = contextBrokerService.retrieveGenericAqdvEntity().bind()
+            val scalarTimeSeries = aqdvService.retrieveTimeSeries().bind()
+
+            // for each time serie, check if last sample time is after the observed at value in the CB
+            // if this is the case:
+            //  - get the values from observed at and add them in the temporal history
+            //  - update the last value and observed at in the CB
+            val timeSeriesToUpdate = scalarTimeSeries.filter {
+                it.lastSampleTime != null
+            }.map {
+                val ngsiLdAttribute =
+                    aqdvEntity.getAttribute(it.name.aqdvNameToNgsiLdProperty(), it.id.toString().toDefaultDatasetId())
+                val lastSampleSync = ZonedDateTime.parse(ngsiLdAttribute?.get("observedAt") as String)
+                Pair(it, lastSampleSync)
+            }.filter {
+                it.second.isBefore(it.first.lastSampleTime)
+            }
+            timeSeriesToUpdate.map {
+                val timeSerieData =
+                    aqdvService.retrieveTimeSerieData(it.first.id, it.second, it.first.lastSampleTime!!).bind()
+                contextBrokerService.addTimeSeriesDataToHistory(it.first, timeSerieData).bind()
+                contextBrokerService.updateTimeSerieDataLastValue(it.first, timeSerieData).bind()
+            }
+        }.fold({
+            logger.error("Error while synchronizing time series data: $it")
+        }, {
+            logger.debug("Successfully synchronized time series data with result : $it")
+        })
 }

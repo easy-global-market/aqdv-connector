@@ -5,10 +5,13 @@ import arrow.core.left
 import arrow.core.right
 import io.egm.aqdv.config.ApplicationProperties
 import io.egm.aqdv.model.ApplicationException
+import io.egm.aqdv.model.ApplicationException.AqdvException
 import io.egm.aqdv.model.ApplicationException.ContextBrokerException
 import io.egm.aqdv.model.ScalarTimeSerie
+import io.egm.aqdv.model.ScalarTimeSerieData
 import io.egm.aqdv.utils.aqdvNameToNgsiLdProperty
 import io.egm.kngsild.api.EntityService
+import io.egm.kngsild.api.TemporalService
 import io.egm.kngsild.model.ResourceNotFound
 import io.egm.kngsild.utils.*
 import io.egm.kngsild.utils.UriUtils.toUri
@@ -31,6 +34,7 @@ class ContextBrokerService(
         applicationProperties.authServer().grantType()
     )
     private val entityService = EntityService(applicationProperties.contextBroker().url(), authUtils)
+    private val temporalService = TemporalService(applicationProperties.contextBroker().url(), authUtils)
 
     fun createGenericAqdvEntity(): Either<ApplicationException, ResourceLocation> {
         val aqdvEntityId = applicationProperties.contextBroker().entityId()
@@ -105,6 +109,56 @@ class ContextBrokerService(
         return entityService.appendAttributes(
             applicationProperties.contextBroker().entityId(),
             attributes,
+            applicationProperties.contextBroker().context()
+        ).mapLeft {
+            ContextBrokerException(it.message)
+        }
+    }
+
+    fun addTimeSeriesDataToHistory(
+        scalarTimeSerie: ScalarTimeSerie,
+        scalarTimeSeriesData: List<ScalarTimeSerieData>
+    ): Either<ApplicationException, String> {
+        val ngsiLdTemporalAttributesInstances = scalarTimeSeriesData.map { scalarTimeSerieData ->
+            NgsiLdPropertyBuilder(scalarTimeSerie.name.aqdvNameToNgsiLdProperty())
+                .withValue(scalarTimeSerieData.value)
+                .withObservedAt(scalarTimeSerieData.time)
+                .withUnitCode(scalarTimeSerie.unit)
+                .withDatasetId(scalarTimeSerie.id.toDefaultDatasetId())
+                .let {
+                    if (scalarTimeSerie.mnemonic != null)
+                        it.withSubProperty("mnemonic", scalarTimeSerie.mnemonic)
+                    else
+                        it
+                }
+                .build()
+        }.groupByProperty()
+
+        return temporalService.addAttributes(
+            applicationProperties.contextBroker().entityId(),
+            ngsiLdTemporalAttributesInstances,
+            applicationProperties.contextBroker().context()
+        ).mapLeft {
+            ContextBrokerException(it.message)
+        }
+    }
+
+    fun updateTimeSerieDataLastValue(
+        scalarTimeSerie: ScalarTimeSerie,
+        scalarTimeSeriesData: List<ScalarTimeSerieData>
+    ): Either<ApplicationException, String> {
+        val lastSample = scalarTimeSeriesData.maxByOrNull {
+            it.time
+        } ?: return AqdvException("No last element found in $scalarTimeSeriesData?!").left()
+        val ngsiLdAttribute = NgsiLdPropertyBuilder(scalarTimeSerie.name.aqdvNameToNgsiLdProperty())
+            .withValue(lastSample.value)
+            .withObservedAt(lastSample.time)
+            .withDatasetId(scalarTimeSerie.id.toDefaultDatasetId())
+            .build()
+        return entityService.partialAttributeUpdate(
+            applicationProperties.contextBroker().entityId(),
+            scalarTimeSerie.name.aqdvNameToNgsiLdProperty(),
+            ngsiLdAttribute.propertyValue,
             applicationProperties.contextBroker().context()
         ).mapLeft {
             ContextBrokerException(it.message)
