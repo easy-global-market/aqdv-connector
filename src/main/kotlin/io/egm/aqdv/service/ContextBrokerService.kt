@@ -118,28 +118,39 @@ class ContextBrokerService(
         scalarTimeSerie: ScalarTimeSerie,
         scalarTimeSeriesData: List<ScalarTimeSerieData>
     ): Either<ApplicationException, String> {
-        val ngsiLdTemporalAttributesInstances = scalarTimeSeriesData.map { scalarTimeSerieData ->
-            NgsiLdPropertyBuilder(scalarTimeSerie.name.aqdvNameToNgsiLdProperty())
-                .withValue(scalarTimeSerieData.value)
-                .withObservedAt(scalarTimeSerieData.time)
-                .withUnitCode(scalarTimeSerie.unit)
-                .withDatasetId(scalarTimeSerie.id.toDefaultDatasetId())
-                .let {
-                    if (scalarTimeSerie.mnemonic != null && scalarTimeSerie.mnemonic != "")
-                        it.withSubProperty("mnemonic", scalarTimeSerie.mnemonic)
-                    else
-                        it
-                }
-                .build()
-        }.groupByProperty()
+        // prepare a chunked list of temporal attribute instances to avoid too large payloads
+        val chunkedNgsiLdTemporalAttributesInstances: List<NgsiLdTemporalAttributesInstances> =
+            scalarTimeSeriesData.map { scalarTimeSerieData ->
+                NgsiLdPropertyBuilder(scalarTimeSerie.name.aqdvNameToNgsiLdProperty())
+                    .withValue(scalarTimeSerieData.value)
+                    .withObservedAt(scalarTimeSerieData.time)
+                    .withUnitCode(scalarTimeSerie.unit)
+                    .withDatasetId(scalarTimeSerie.id.toDefaultDatasetId())
+                    .let {
+                        if (scalarTimeSerie.mnemonic != null && scalarTimeSerie.mnemonic != "")
+                            it.withSubProperty("mnemonic", scalarTimeSerie.mnemonic)
+                        else
+                            it
+                    }
+                    .build()
+            }.chunked(100).map { it.groupByProperty() }
 
-        return temporalService.addAttributes(
-            applicationProperties.contextBroker().entityId(),
-            ngsiLdTemporalAttributesInstances,
-            applicationProperties.contextBroker().context()
-        ).mapLeft {
-            ContextBrokerException(it.message)
+        // send each chunk of temporal attribute instances
+        val addInstancesResult = chunkedNgsiLdTemporalAttributesInstances.map { ngsiLdTemporalAttributesInstances ->
+            temporalService.addAttributes(
+                applicationProperties.contextBroker().entityId(),
+                ngsiLdTemporalAttributesInstances,
+                applicationProperties.contextBroker().context()
+            ).mapLeft { applicationError ->
+                ContextBrokerException(applicationError.message)
+            }
         }
+
+        // this is actually quite dirty
+        // only considering the presence of one error among all the results
+        return if (addInstancesResult.any { it.isLeft() })
+            addInstancesResult.find { it.isLeft() }!!.mapLeft { it }
+        else "".right()
     }
 
     fun updateTimeSerieDataLastValue(
