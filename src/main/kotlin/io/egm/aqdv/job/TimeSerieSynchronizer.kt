@@ -65,7 +65,7 @@ class TimeSerieSynchronizer(
                 it.lastSampleTime != null
             }.map {
                 val ngsiLdAttribute =
-                    aqdvEntity.getAttribute(it.name.aqdvNameToNgsiLdProperty(), it.id.toString().toDefaultDatasetId())
+                    aqdvEntity.getAttribute(it.name.aqdvNameToNgsiLdProperty(), it.id.toDefaultDatasetId())
                 val lastSampleSync = ZonedDateTime.parse(ngsiLdAttribute?.get("observedAt") as String)
                 Pair(it, lastSampleSync)
             }.filter {

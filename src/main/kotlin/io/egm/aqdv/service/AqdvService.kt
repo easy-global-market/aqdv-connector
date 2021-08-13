@@ -9,6 +9,7 @@ import com.github.kittinunf.fuel.coroutines.awaitObjectResult
 import io.egm.aqdv.config.ApplicationProperties
 import io.egm.aqdv.model.*
 import io.egm.aqdv.model.ApplicationException.AqdvException
+import io.egm.kngsild.utils.toNgsiLdFormat
 import kotlinx.coroutines.runBlocking
 import org.jboss.logging.Logger
 import java.time.ZonedDateTime
@@ -44,8 +45,8 @@ class AqdvService(
     ): Either<ApplicationException, List<ScalarTimeSerieData>> =
         runBlocking {
             Fuel.get(
-                "/scalartimeseries/$scalarTimeSerieId/data",
-                listOf("startTime" to startTime, "endTime" to endTime)
+                "/scalartimeseries/$scalarTimeSerieId/data/",
+                listOf("startTime" to startTime.toNgsiLdFormat(), "endTime" to endTime.toNgsiLdFormat())
             )
                 .awaitObjectResult(ScalarTimeSerieDataDeserializer)
                 .fold(

@@ -125,7 +125,7 @@ class ContextBrokerService(
                 .withUnitCode(scalarTimeSerie.unit)
                 .withDatasetId(scalarTimeSerie.id.toDefaultDatasetId())
                 .let {
-                    if (scalarTimeSerie.mnemonic != null)
+                    if (scalarTimeSerie.mnemonic != null && scalarTimeSerie.mnemonic != "")
                         it.withSubProperty("mnemonic", scalarTimeSerie.mnemonic)
                     else
                         it
