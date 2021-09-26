@@ -1,7 +1,6 @@
 package io.egm.aqdv.config
 
 import io.smallrye.config.ConfigMapping
-import java.net.URI
 
 @ConfigMapping(prefix = "application")
 interface ApplicationProperties {
@@ -18,11 +17,13 @@ interface ApplicationProperties {
         // even if not used from this config interface (used by the scheduler config)
         // the app won't start if they are not defined
         fun cron(): Cron
+
+        fun knownTimeseries(): Set<String>
+
+        fun targetProperty(): String
     }
 
     interface Cron {
-        fun timeSeries(): String
-
         fun timeSeriesData(): String
     }
 
@@ -30,8 +31,6 @@ interface ApplicationProperties {
         fun context(): String
 
         fun url(): String
-
-        fun entityId(): URI
     }
 
     interface AuthServer {

@@ -1,6 +1,7 @@
 package io.egm.aqdv.service
 
 import arrow.core.Either
+import arrow.core.computations.either
 import arrow.core.left
 import arrow.core.right
 import com.github.kittinunf.fuel.Fuel
@@ -10,7 +11,6 @@ import io.egm.aqdv.config.ApplicationProperties
 import io.egm.aqdv.model.*
 import io.egm.aqdv.model.ApplicationException.AqdvException
 import io.egm.kngsild.utils.toNgsiLdFormat
-import kotlinx.coroutines.runBlocking
 import org.jboss.logging.Logger
 import java.time.ZonedDateTime
 import java.util.*
@@ -28,30 +28,44 @@ class AqdvService(
         FuelManager.instance.basePath = applicationProperties.aqdv().url()
     }
 
-    fun retrieveTimeSeries(): Either<ApplicationException, List<ScalarTimeSerie>> =
-        runBlocking {
-            Fuel.get("/scalartimeseries/")
-                .awaitObjectResult(ScalarTimeSerieDeserializer)
-                .fold(
-                    { data -> data.right() },
-                    { error -> AqdvException(error.response.responseMessage).left() }
-                )
+    suspend fun retrieveKnownTimeSeries(): Either<ApplicationException, List<ScalarTimeSerie>> =
+        either {
+            applicationProperties.aqdv().knownTimeseries().map {
+                retrieveTimeSerie(UUID.fromString(it)).bind()
+            }
         }
 
-    fun retrieveTimeSerieData(
+    suspend fun retrieveTimeSerie(scalarTimeSerieId: UUID): Either<ApplicationException, ScalarTimeSerie> =
+        Fuel.get("/scalartimeseries/$scalarTimeSerieId/")
+            .awaitObjectResult(ScalarTimeSerieDeserializer)
+            .also { result ->
+                logger.debug(result)
+            }
+            .fold(
+                { data -> data.right() },
+                { error -> AqdvException(error.response.responseMessage).left() }
+            )
+
+    suspend fun retrieveTimeSerieData(
         scalarTimeSerieId: UUID,
         startTime: ZonedDateTime,
         endTime: ZonedDateTime
-    ): Either<ApplicationException, List<ScalarTimeSerieData>> =
-        runBlocking {
-            Fuel.get(
-                "/scalartimeseries/$scalarTimeSerieId/data/",
-                listOf("startTime" to startTime.toNgsiLdFormat(), "endTime" to endTime.toNgsiLdFormat())
-            )
-                .awaitObjectResult(ScalarTimeSerieDataDeserializer)
-                .fold(
-                    { data -> data.right() },
-                    { error -> AqdvException(error.response.responseMessage).left() }
-                )
+    ): Either<ApplicationException, List<ScalarTimeSerieData>> {
+        logger.debug("Retrieving data for time serie $scalarTimeSerieId between $startTime and $endTime")
+        return Fuel.get(
+            "/scalartimeseries/$scalarTimeSerieId/data/",
+            listOf("startTime" to startTime.toNgsiLdFormat(), "endTime" to endTime.toNgsiLdFormat())
+        )
+        .also { request ->
+            logger.debug(request.parameters)
         }
+        .awaitObjectResult(ScalarTimeSerieDataDeserializer)
+        .also { result ->
+            logger.debug(result)
+        }
+        .fold(
+            { data -> data.right() },
+            { error -> AqdvException(error.response.responseMessage).left() }
+        )
+    }
 }

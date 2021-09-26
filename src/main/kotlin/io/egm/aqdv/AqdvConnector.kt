@@ -1,9 +1,10 @@
 package io.egm.aqdv
 
-import io.egm.aqdv.service.ContextBrokerService
+import io.egm.aqdv.service.ScalaTimeSeriesInitializer
 import io.quarkus.runtime.Quarkus
 import io.quarkus.runtime.QuarkusApplication
 import io.quarkus.runtime.annotations.QuarkusMain
+import kotlinx.coroutines.runBlocking
 import org.jboss.logging.Logger
 import javax.inject.Inject
 
@@ -18,16 +19,18 @@ object Main {
     }
 
     class AqdvConnector(
-        @Inject private val contextBrokerService: ContextBrokerService
+        @Inject private val scalaTimeSeriesInitializer: ScalaTimeSeriesInitializer
     ): QuarkusApplication {
 
         override fun run(vararg args: String?): Int {
-            contextBrokerService.createGenericAqdvEntity().fold({
-                logger.error("Unable to create the generic AQDV entity (reason: $it), exiting")
-                Quarkus.asyncExit(-1)
-            }, {
-                logger.info("Generic AQDV entity is ready to be used")
-            })
+            runBlocking {
+                scalaTimeSeriesInitializer.initializeScalarTimeSeries().fold({
+                    logger.error("Unable to create the required AQDV entities (reason: $it), exiting")
+                    Quarkus.asyncExit(-1)
+                }, {
+                    logger.info("AQDV entities are ready to be used")
+                })
+            }
             Quarkus.waitForExit()
             return 0
         }

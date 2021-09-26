@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "1.4.32"
-    kotlin("plugin.allopen") version "1.4.32"
-    kotlin("kapt") version "1.4.32"
+    kotlin("jvm") version "1.5.30"
+    kotlin("plugin.allopen") version "1.5.30"
+    kotlin("kapt") version "1.5.30"
     id("io.quarkus")
 }
 
@@ -14,9 +14,11 @@ repositories {
 val quarkusPlatformGroupId: String by project
 val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
+val arrowKtVersion: String by project
 
 dependencies {
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
+    implementation(platform("io.arrow-kt:arrow-stack:${arrowKtVersion}"))
     implementation("io.quarkus:quarkus-quartz")
     implementation("io.quarkus:quarkus-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -27,12 +29,8 @@ dependencies {
     implementation("com.github.kittinunf.fuel:fuel-jackson:2.3.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.+")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-    implementation("io.arrow-kt:arrow-core:0.11.0")
-    implementation("io.arrow-kt:arrow-syntax:0.11.0")
-    implementation("io.arrow-kt:arrow-fx:0.11.0")
+    implementation("io.arrow-kt:arrow-fx-coroutines")
     implementation("io.egm:kngsild:0.3.0-dev")
-
-    kapt("io.arrow-kt:arrow-meta:0.11.0")
 
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-junit5-mockito")
