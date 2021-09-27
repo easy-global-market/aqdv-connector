@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import io.egm.aqdv.config.ApplicationProperties
+import io.egm.aqdv.model.AQDV_TS_TYPE
 import io.egm.aqdv.model.ScalarTimeSerie
 import io.quarkus.test.junit.QuarkusTest
 import kotlinx.coroutines.runBlocking
@@ -57,7 +58,7 @@ class ContextBrokerServiceTests {
         stubFor(
             post(urlPathMatching("/ngsi-ld/v1/entities"))
                 .willReturn(
-                    created().withHeader("Location", "/ngsi-ld/v1/entities/urn:ngsi-ld:AqdvTimeSerie:$uuid")
+                    created().withHeader("Location", "/ngsi-ld/v1/entities/urn:ngsi-ld:$AQDV_TS_TYPE:$uuid")
                 )
         )
 
@@ -66,7 +67,7 @@ class ContextBrokerServiceTests {
                 .fold({
                     fail("Should have not thrown an exception (reason: $it)!")
                 }, {
-                    it == "/ngsi-ld/v1/entities/urn:ngsi-ld:AqdvTimeSerie:$uuid"
+                    it == "/ngsi-ld/v1/entities/urn:ngsi-ld:$AQDV_TS_TYPE:$uuid"
                 })
         }
     }

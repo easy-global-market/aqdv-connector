@@ -5,6 +5,7 @@ import arrow.core.computations.either
 import arrow.core.left
 import arrow.core.right
 import io.egm.aqdv.config.ApplicationProperties
+import io.egm.aqdv.model.AQDV_TS_TYPE
 import io.egm.aqdv.model.ApplicationException
 import io.egm.aqdv.model.ApplicationException.AqdvException
 import io.egm.aqdv.model.ApplicationException.ContextBrokerException
@@ -40,13 +41,13 @@ class ContextBrokerService(
     suspend fun getNonExistingEntities(): Either<ApplicationException, List<URI>> {
         val idsOfExpectedEntities = applicationProperties.aqdv().knownTimeseries()
                 .mapNotNull {
-                    "urn:ngsi-ld:AqdvTimeSerie:$it".toUri()
+                    "urn:ngsi-ld:$AQDV_TS_TYPE:$it".toUri()
                 }
         logger.info("Searching non existing entites among: $idsOfExpectedEntities")
         return either {
             val existingEntities = entityService.query(
                     mapOf(
-                        "type" to "AqdvTimeSerie",
+                        "type" to AQDV_TS_TYPE,
                         "ids" to idsOfExpectedEntities.joinToString(",")
                     ),
                     applicationProperties.contextBroker().context()
@@ -63,7 +64,7 @@ class ContextBrokerService(
     ): Either<ApplicationException, ResourceLocation> {
         val ngsiLdEntity = NgsiLdEntityBuilder(
             scalarTimeSerie.ngsiLdEntityId(),
-            "AqdvTimeSerie",
+            AQDV_TS_TYPE,
             listOf(applicationProperties.contextBroker().context())
         ).addAttribute(
             NgsiLdPropertyBuilder(applicationProperties.aqdv().targetProperty())

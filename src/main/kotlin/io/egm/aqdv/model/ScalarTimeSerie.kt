@@ -11,6 +11,8 @@ import java.net.URI
 import java.time.ZonedDateTime
 import java.util.*
 
+const val AQDV_TS_TYPE = "AqdvTimeSerie"
+
 data class ScalarTimeSerie(
     val id: UUID,
     val name: String,
@@ -18,7 +20,7 @@ data class ScalarTimeSerie(
     val unit: String?,
     val lastSampleTime: ZonedDateTime?
 ) {
-    fun ngsiLdEntityId(): URI = "urn:ngsi-ld:AqdvTimeSerie:$id".toUri()!!
+    fun ngsiLdEntityId(): URI = "urn:ngsi-ld:$AQDV_TS_TYPE:$id".toUri()!!
 }
 
 data class ScalarTimeSerieData(
