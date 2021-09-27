@@ -45,7 +45,10 @@ class ContextBrokerService(
         logger.info("Searching non existing entites among: $idsOfExpectedEntities")
         return either {
             val existingEntities = entityService.query(
-                    mapOf("ids" to idsOfExpectedEntities.joinToString(",")),
+                    mapOf(
+                        "type" to "AqdvTimeSerie",
+                        "ids" to idsOfExpectedEntities.joinToString(",")
+                    ),
                     applicationProperties.contextBroker().context()
             ).mapLeft {
                 ContextBrokerException(it.message)
