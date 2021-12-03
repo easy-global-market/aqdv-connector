@@ -1,6 +1,7 @@
 package io.egm.aqdv.config
 
 import io.smallrye.config.ConfigMapping
+import java.util.*
 
 @ConfigMapping(prefix = "application")
 interface ApplicationProperties {
@@ -18,9 +19,15 @@ interface ApplicationProperties {
         // the app won't start if they are not defined
         fun cron(): Cron
 
-        fun knownTimeseries(): Set<String>
+        fun knownTimeseries(): List<KnownTimeserie>
 
         fun targetProperty(): String
+
+        interface KnownTimeserie {
+            fun uuid(): UUID
+
+            fun mutablePeriodMinutes(): Int = 0
+        }
     }
 
     interface Cron {

@@ -41,7 +41,7 @@ class ContextBrokerService(
     suspend fun getNonExistingEntities(): Either<ApplicationException, List<URI>> {
         val idsOfExpectedEntities = applicationProperties.aqdv().knownTimeseries()
                 .mapNotNull {
-                    "urn:ngsi-ld:$AQDV_TS_TYPE:$it".toUri()
+                    "urn:ngsi-ld:$AQDV_TS_TYPE:${it.uuid()}".toUri()
                 }
         logger.info("Searching non existing entites among: $idsOfExpectedEntities")
         return either {
@@ -55,7 +55,7 @@ class ContextBrokerService(
                 ContextBrokerException(it.message)
             }.bind()
             val existingsEntitiesIds = existingEntities.mapNotNull { (it["id"]!! as String).toUri() }
-            idsOfExpectedEntities.minus(existingsEntitiesIds)
+            idsOfExpectedEntities.minus(existingsEntitiesIds.toSet())
         }
     }
 

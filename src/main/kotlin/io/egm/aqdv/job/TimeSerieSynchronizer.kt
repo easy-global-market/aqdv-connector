@@ -9,6 +9,8 @@ import io.egm.kngsild.utils.getAttribute
 import io.quarkus.scheduler.Scheduled
 import kotlinx.coroutines.runBlocking
 import org.jboss.logging.Logger
+import java.time.Instant
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
@@ -41,22 +43,30 @@ class TimeSerieSynchronizer(
                 //  - get the values from observed at and add them in the temporal history
                 //  - update the last value and observed at in the CB
                 val timeSeriesToUpdate = scalarTimeSeries.filter {
-                    it.lastSampleTime != null
+                    it.second.lastSampleTime != null
                 }.map {
-                    val scalarTimeSerieEntity = contextBrokerService.retrieveEntity(it.ngsiLdEntityId()).bind()
+                    val scalarTimeSerieEntity = contextBrokerService.retrieveEntity(it.second.ngsiLdEntityId()).bind()
                     val ngsiLdAttribute =
                         scalarTimeSerieEntity.getAttribute(applicationProperties.aqdv().targetProperty())
                     val lastSampleSync = ZonedDateTime.parse(ngsiLdAttribute?.get("observedAt") as String)
-                    Pair(it, lastSampleSync)
-                }.filter {
-                    it.second.isBefore(it.first.lastSampleTime)
+                    Triple(it.first, it.second, lastSampleSync)
+                }.filter { (_, scalarTimeserie, lastObservedDate) ->
+                    lastObservedDate.isBefore(scalarTimeserie.lastSampleTime)
                 }
-                timeSeriesToUpdate.map {
-                    val entityId = it.first.ngsiLdEntityId()
+                timeSeriesToUpdate.map { (knownTimeserie, scalarTimeserie, lastObservedDate) ->
+                    val computedStartDate =
+                        minOf(Instant.now().atZone(ZoneOffset.UTC), lastObservedDate)
+                            .let {
+                                if (knownTimeserie.mutablePeriodMinutes() != 0)
+                                    it.minusMinutes(knownTimeserie.mutablePeriodMinutes().toLong())
+                                else
+                                    it
+                            }
+                    val entityId = scalarTimeserie.ngsiLdEntityId()
                     val timeSerieData =
-                        aqdvService.retrieveTimeSerieData(it.first.id, it.second, it.first.lastSampleTime!!).bind()
-                    contextBrokerService.addTimeSeriesDataToHistory(entityId, it.first, timeSerieData).bind()
-                    contextBrokerService.updateTimeSerieDataLastValue(entityId, it.first, timeSerieData).bind()
+                        aqdvService.retrieveTimeSerieData(scalarTimeserie.id, computedStartDate, scalarTimeserie.lastSampleTime!!).bind()
+                    contextBrokerService.addTimeSeriesDataToHistory(entityId, scalarTimeserie, timeSerieData).bind()
+                    contextBrokerService.updateTimeSerieDataLastValue(entityId, scalarTimeserie, timeSerieData).bind()
                 }
             }.fold({
                 logger.error("Error while synchronizing time series data: $it")

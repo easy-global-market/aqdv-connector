@@ -8,6 +8,7 @@ import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.coroutines.awaitObjectResult
 import io.egm.aqdv.config.ApplicationProperties
+import io.egm.aqdv.config.ApplicationProperties.Aqdv.KnownTimeserie
 import io.egm.aqdv.model.*
 import io.egm.aqdv.model.ApplicationException.AqdvException
 import io.egm.kngsild.utils.toNgsiLdFormat
@@ -28,10 +29,10 @@ class AqdvService(
         FuelManager.instance.basePath = applicationProperties.aqdv().url()
     }
 
-    suspend fun retrieveKnownTimeSeries(): Either<ApplicationException, List<ScalarTimeSerie>> =
+    suspend fun retrieveKnownTimeSeries(): Either<ApplicationException, List<Pair<KnownTimeserie, ScalarTimeSerie>>> =
         either {
             applicationProperties.aqdv().knownTimeseries().map {
-                retrieveTimeSerie(UUID.fromString(it)).bind()
+                Pair(it, retrieveTimeSerie(it.uuid()).bind())
             }
         }
 
