@@ -40,7 +40,7 @@ class AqdvService(
         Fuel.get("/scalartimeseries/$scalarTimeSerieId/")
             .awaitObjectResult(ScalarTimeSerieDeserializer)
             .also { result ->
-                logger.debug(result)
+                logger.trace(result)
             }
             .fold(
                 { data -> data.right() },
@@ -57,16 +57,16 @@ class AqdvService(
             "/scalartimeseries/$scalarTimeSerieId/data/",
             listOf("startTime" to startTime.toNgsiLdFormat(), "endTime" to endTime.toNgsiLdFormat())
         )
-        .also { request ->
-            logger.debug(request.parameters)
-        }
         .awaitObjectResult(ScalarTimeSerieDataDeserializer)
         .also { result ->
-            logger.debug(result)
+            logger.trace(result)
         }
         .fold(
             { data -> data.right() },
-            { error -> AqdvException(error.response.responseMessage).left() }
+            { error ->
+                logger.error("Error while retrieving timeserie data ${error.response}")
+                AqdvException(error.response.responseMessage).left()
+            }
         )
     }
 }

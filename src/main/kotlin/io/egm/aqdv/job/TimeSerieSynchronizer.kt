@@ -49,6 +49,7 @@ class TimeSerieSynchronizer(
                     val ngsiLdAttribute =
                         scalarTimeSerieEntity.getAttribute(applicationProperties.aqdv().targetProperty())
                     val lastSampleSync = ZonedDateTime.parse(ngsiLdAttribute?.get("observedAt") as String)
+                    logger.debug("Entity ${it.second.ngsiLdEntityId()} has last observation date at $lastSampleSync")
                     Triple(it.first, it.second, lastSampleSync)
                 }
                 timeSeriesToUpdate.map { (knownTimeserie, scalarTimeserie, lastObservedDate) ->
@@ -70,7 +71,7 @@ class TimeSerieSynchronizer(
             }.fold({
                 logger.error("Error while synchronizing time series data: $it")
             }, {
-                logger.debug("Successfully synchronized time series data with result : $it")
+                logger.info("Successfully synchronized time series data!")
             })
         }
 }
