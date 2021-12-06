@@ -50,18 +50,17 @@ class TimeSerieSynchronizer(
                         scalarTimeSerieEntity.getAttribute(applicationProperties.aqdv().targetProperty())
                     val lastSampleSync = ZonedDateTime.parse(ngsiLdAttribute?.get("observedAt") as String)
                     Triple(it.first, it.second, lastSampleSync)
-                }.filter { (_, scalarTimeserie, lastObservedDate) ->
-                    lastObservedDate.isBefore(scalarTimeserie.lastSampleTime)
                 }
                 timeSeriesToUpdate.map { (knownTimeserie, scalarTimeserie, lastObservedDate) ->
                     val computedStartDate =
                         minOf(Instant.now().atZone(ZoneOffset.UTC), lastObservedDate)
-                            .let {
-                                if (knownTimeserie.mutablePeriodMinutes() != 0)
-                                    it.minusMinutes(knownTimeserie.mutablePeriodMinutes().toLong())
-                                else
-                                    it
-                            }
+                        .let {
+                            if (knownTimeserie.mutablePeriodMinutes() != 0)
+                                it.minusMinutes(knownTimeserie.mutablePeriodMinutes().toLong())
+                            else
+                                it
+                        }.withNano(0)
+
                     val entityId = scalarTimeserie.ngsiLdEntityId()
                     val timeSerieData =
                         aqdvService.retrieveTimeSerieData(scalarTimeserie.id, computedStartDate, scalarTimeserie.lastSampleTime!!).bind()
