@@ -30,7 +30,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.+")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("io.arrow-kt:arrow-fx-coroutines")
-    implementation("io.egm:kngsild:0.3.0-dev")
+    implementation("io.egm:kngsild:0.4.0-dev")
 
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-junit5-mockito")
