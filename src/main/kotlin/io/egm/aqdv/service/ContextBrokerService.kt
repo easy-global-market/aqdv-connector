@@ -33,7 +33,8 @@ class ContextBrokerService(
         applicationProperties.authServer().url(),
         applicationProperties.authServer().clientId(),
         applicationProperties.authServer().clientSecret(),
-        applicationProperties.authServer().grantType()
+        applicationProperties.authServer().grantType(),
+        applicationProperties.authServer().enabled()
     )
     private val entityService = EntityService(applicationProperties.contextBroker().url(), authUtils)
     private val temporalService = TemporalService(applicationProperties.contextBroker().url(), authUtils)

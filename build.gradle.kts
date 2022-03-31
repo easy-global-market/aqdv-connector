@@ -27,15 +27,15 @@ dependencies {
     implementation("com.github.kittinunf.fuel:fuel:2.3.1")
     implementation("com.github.kittinunf.fuel:fuel-coroutines:2.3.1")
     implementation("com.github.kittinunf.fuel:fuel-jackson:2.3.1")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.+")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("io.arrow-kt:arrow-fx-coroutines")
-    implementation("io.egm:kngsild:0.4.0-dev")
+    implementation("io.egm:kngsild:0.3.2")
 
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-junit5-mockito")
     testImplementation("io.rest-assured:rest-assured")
-    testImplementation("com.github.tomakehurst:wiremock-jre8:2.29.1")
+    testImplementation("com.github.tomakehurst:wiremock-jre8:2.32.0")
 }
 
 group = "io.egm"

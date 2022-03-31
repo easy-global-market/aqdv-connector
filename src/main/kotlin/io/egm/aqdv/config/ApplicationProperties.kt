@@ -48,5 +48,7 @@ interface ApplicationProperties {
         fun clientSecret(): String
 
         fun grantType(): String
+
+        fun enabled(): Boolean
     }
 }
