@@ -43,7 +43,7 @@ class ContextBrokerService(
                 .mapNotNull {
                     "urn:ngsi-ld:$AQDV_TS_TYPE:${it.uuid()}".toUri()
                 }
-        logger.info("Searching non existing entites among: $idsOfExpectedEntities")
+        logger.info("Searching non existing entities among: $idsOfExpectedEntities")
         return either {
             val existingEntities = entityService.query(
                     mapOf(
